@@ -116,6 +116,15 @@ resource "aws_instance" "myapp-instance" {
 
   associate_public_ip_address = true
   key_name                    = "server-key-pair"
+ /* This section is to execute some command at the entry point of the ec2 instance*/ 
+  user_data = <<EOF
+               #!/bin/bash
+               sudo yum update && sudo yum install -y docker
+               sudo systemctl start docker
+               sudo usermod -aG docker ec2-user
+               docker run -p 8080:80 nginx
+
+              EOF
 
   tags = {
     Name : "${var.env_prefix}-server"
