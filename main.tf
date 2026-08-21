@@ -101,7 +101,7 @@ resource "aws_key_pair" "ssh-key" {
 }
 
 output "ec2_public_ip" {
-  value       = "aws_instance.myapp-instance.public_ip"
+  value       = aws_instance.myapp-instance.public_ip
   description = "Public Ip of the ec2"
 }
 
@@ -117,14 +117,16 @@ resource "aws_instance" "myapp-instance" {
   associate_public_ip_address = true
   key_name                    = "server-key-pair"
  /* This section is to execute some command at the entry point of the ec2 instance*/ 
-  user_data = <<EOF
-               #!/bin/bash
-               sudo yum update && sudo yum install -y docker
-               sudo systemctl start docker
-               sudo usermod -aG docker ec2-user
-               docker run -p 8080:80 nginx
-
+  user_data = <<-EOF
+                   #!/bin/bash
+                   sudo yum update 
+                   sudo yum install -y docker
+                   sudo systemctl enable --now docker
+                   sudo usermod -aG docker ec2-user
+                   docker run -p 8080:80 nginx
               EOF
+
+ // user_data = file("entry-script.sh")
 
   tags = {
     Name : "${var.env_prefix}-server"
