@@ -1,4 +1,10 @@
 *.tfvars
 *.terraform/
 *.tfstate.*
+*.tfstate
+*.tfvars.json
+*.pem
+*.key
+crash.log
+crash.*.log
 *.lock.hcl
