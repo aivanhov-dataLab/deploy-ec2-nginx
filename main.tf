@@ -3,16 +3,6 @@ provider "aws" {
   secret_key = var.cle_secret
   access_key = var.cle_access
 }
-variable "cle_secret" {}
-variable "cle_access" {}
-variable "vpc_cidr_block" {}
-variable "subnet_cidr_block" {}
-variable "available_zone" {}
-variable "env_prefix" {}
-variable "my_ip" {}
-variable "ami" {}
-variable "instance_type" {}
-variable "my_ssh_key" {}
 
 resource "aws_vpc" "myapp-vpc" {
   cidr_block = var.vpc_cidr_block
@@ -21,40 +11,18 @@ resource "aws_vpc" "myapp-vpc" {
   }
 }
 
-resource "aws_subnet" "myapp-subnet-1" {
-  vpc_id            = aws_vpc.myapp-vpc.id
-  cidr_block        = var.subnet_cidr_block
-  availability_zone = var.available_zone
-  tags = {
-    Name = "${var.env_prefix}-subnet-1"
-  }
-}
+module "myapp-subnet" {
+  source = "./modules/subnet"
 
-resource "aws_internet_gateway" "myapp-igw" {
+  subnet_cidr_block = var.subnet_cidr_block
+  available_zone = var.available_zone
+  env_prefix = var.env_prefix
   vpc_id = aws_vpc.myapp-vpc.id
+  /*route_table_id = var.route_table_id */
 
-
-  tags = {
-    Name : "${var.env_prefix}-igw"
-  }
 }
 
-resource "aws_route_table" "myapp-route-table" {
-  vpc_id = aws_vpc.myapp-vpc.id
 
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.myapp-igw.id
-  }
-  tags = {
-    Name : "${var.env_prefix}-rtb"
-  }
-}
-
-resource "aws_route_table_association" "a-rtb-subnet" {
-  subnet_id      = aws_subnet.myapp-subnet-1.id
-  route_table_id = aws_route_table.myapp-route-table.id
-}
 
 resource "aws_security_group" "myapp-SG" {
   name   = "myapp-SG"
@@ -100,33 +68,20 @@ resource "aws_key_pair" "ssh-key" {
   public_key = var.my_ssh_key
 }
 
-output "ec2_public_ip" {
-  value       = aws_instance.myapp-instance.public_ip
-  description = "Public Ip of the ec2"
-}
 
 
 resource "aws_instance" "myapp-instance" {
   ami           = var.ami
   instance_type = var.instance_type
 
-  subnet_id              = aws_subnet.myapp-subnet-1.id
+  subnet_id              = module.myapp-subnet.subnet.id
   vpc_security_group_ids = [aws_security_group.myapp-SG.id]
   availability_zone      = var.available_zone
 
   associate_public_ip_address = true
-  key_name                    = "server-key-pair"
- /* This section is to execute some command at the entry point of the ec2 instance*/ 
-  user_data = <<-EOF
-                   #!/bin/bash
-                   sudo yum update 
-                   sudo yum install -y docker
-                   sudo systemctl enable --now docker
-                   sudo usermod -aG docker ec2-user
-                   docker run -p 8080:80 nginx
-              EOF
-
- // user_data = file("entry-script.sh")
+  key_name                    = "server-key"
+ 
+  user_data = file("entry-script.sh")
 
   tags = {
     Name : "${var.env_prefix}-server"

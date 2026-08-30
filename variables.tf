@@ -1,0 +1,11 @@
+variable "cle_secret" {}
+variable "cle_access" {}
+variable "vpc_cidr_block" {}
+variable "subnet_cidr_block" {}
+variable "available_zone" {}
+variable "env_prefix" {}
+variable "my_ip" {}
+variable "ami" {}
+variable "instance_type" {}
+variable "my_ssh_key" {}
+//variable "route_table_id" {}
