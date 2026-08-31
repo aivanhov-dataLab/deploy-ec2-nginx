@@ -1,0 +1,9 @@
+variable ami {}
+variable instance_type {}
+variable available_zone {}
+variable env_prefix {}
+variable my_ip {}
+variable my_ssh_key {}
+variable vpc_id {}
+variable subnet_id {}
+variable user_data {}

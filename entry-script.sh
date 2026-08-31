@@ -1,7 +1,15 @@
 
 #!/bin/bash
-sudo yum update 
-sudo yum install -y docker
-sudo systemctl enable --now docker
-sudo usermod -aG docker ec2-user
-docker run -p 8080:80 nginx
+
+yum update -y
+
+yum install -y docker
+
+systemctl enable docker
+systemctl start docker
+
+usermod -aG docker ec2-user
+
+docker pull nginx
+
+docker run -d --name nginx -p 8080:80 nginx
